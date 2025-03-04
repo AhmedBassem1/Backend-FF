@@ -97,17 +97,14 @@ def confirm():
         user_data = a.temp_data[email]
         try:
             cursor = a.conn.cursor()
-            cursor.execute("INSERT INTO actor.user (name, email, phone, password , company_name) VALUES (%s, %s, %s, %s , %s)",
-                           (user_data['name'], email, user_data['phone'], user_data['password'] , user_data['company_name']))
+            cursor.execute("INSERT INTO actor.user (name, email, phone, password) VALUES (%s, %s, %s, %s)",
+                           (user_data['name'], email, user_data['phone'], user_data['password']))
             a.conn.commit()
             cursor.close()
 
             a.temp_data.pop(email)
-            
             return a.jsonify({"message": "Registration successful!"}), 201
-        
         except Exception as e:
-            
             return a.jsonify({"error": f"Registration failed: {e}"}), 400
 
     return a.jsonify({"error": "Invalid or expired code!"}), 400
@@ -115,6 +112,8 @@ def confirm():
 
 @a.app.route('/login', methods=['POST'])
 def login():
+    
+    print(1)
     
     data = a.request.json
     email = data.get('email')
@@ -260,7 +259,7 @@ def check_token():
     try:
         # فك تشفير التوكن والتحقق من صحته
         decoded = a.jwt.decode(token, a.app.config['SECRET_KEY'], algorithms=['HS256'])
-        user_id = decoded['user_id']  # يمكن استخدام user_id لاحقًا إذا لزم الأمر
+        a.user_id = decoded['user_id']  # يمكن استخدام user_id لاحقًا إذا لزم الأمر
 
         # إذا كان التوكن صالحًا، نعيد رسالة نجاح
         return a.jsonify({"message": "Token is valid!"}), 200
@@ -282,11 +281,11 @@ def user_data():
         return a.jsonify({"error": "Token missing!"}), 401
     try:
         decoded = a.jwt.decode(token, a.app.config['SECRET_KEY'], algorithms=['HS256'])
-        user_id = decoded['user_id']
+        a.user_id = decoded['user_id']
         cursor = a.conn.cursor()
-        cursor.execute("SELECT name, email, phone , user_name , company_name FROM actor.user WHERE user_id = %s", (user_id,))
+        cursor.execute("SELECT name, email, phone , user_name FROM actor.user WHERE user_id = %s", (a.user_id,))
         user = cursor.fetchone()
         cursor.close()
-        return a.jsonify({"name": user[0], "email": user[1], "phone": user[2] , "user_name" : user[3] , "company_name" : user[4]}), 200
+        return a.jsonify({"name": user[0], "email": user[1], "phone": user[2] , "user_name" : user[3]}), 200
     except Exception as e:
         return a.jsonify({"error": f"Invalid token: {e}"}), 401

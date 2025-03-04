@@ -84,7 +84,7 @@ def receive_code_country():
     if not country:
         return a.jsonify({'error': 'Missing code or country'}), 400
     
-    return a.jsonify({'message': 'Data received', 'country': country})
+    return a.jsonify({'message': 'Data received', 'country': country , 'code' : code})
 
 
 
